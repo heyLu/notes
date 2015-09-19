@@ -29,43 +29,47 @@ type Post struct {
 }
 
 func main() {
-	ImportFromPinboard(os.Args[1], "files://db?name=posts")
-}
-
-func ImportFromPinboard(pinboardXMLPath, dbUrl string) {
-	f, err := os.Open(pinboardXMLPath)
+	err := ImportFromPinboard(os.Args[1], "files://db?name=posts")
 	if err != nil {
 		panic(err)
 	}
+}
+
+func ImportFromPinboard(pinboardXMLPath, dbUrl string) error {
+	f, err := os.Open(pinboardXMLPath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
 
 	decoder := xml.NewDecoder(f)
 	var posts Posts
 	err = decoder.Decode(&posts)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	fmt.Println(len(posts.Posts))
 
 	isNew, err := mu.CreateDatabase(dbUrl)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	conn, err := mu.Connect(dbUrl)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if isNew {
 		schema, err := ioutil.ReadFile("schema.edn")
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		_, err = mu.TransactString(conn, string(schema))
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
@@ -91,10 +95,11 @@ func ImportFromPinboard(pinboardXMLPath, dbUrl string) {
 
 	txRes, err := mu.Transact(conn, txData)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	fmt.Println("added", len(txRes.Datoms), "datoms")
+	return nil
 }
 
 func generateId() string {
