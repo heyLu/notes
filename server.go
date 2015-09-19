@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -51,7 +52,7 @@ func (p Post) Date() time.Time {
 
 func ListPosts(w http.ResponseWriter, req *http.Request) {
 	db := serverConfig.conn.Db()
-	posts := listPosts(db, 100)
+	posts := listPosts(db, fromQueryInt(req, "n", 100))
 	listPostsTemplate.Execute(w, posts)
 }
 
@@ -102,3 +103,14 @@ var listPostsTemplateStr = `<!doctype html>
 	</body>
 </html>
 `
+
+func fromQueryInt(req *http.Request, param string, n int) int {
+	val := req.URL.Query().Get(param)
+	if val != "" {
+		n, err := strconv.Atoi(val)
+		if err == nil {
+			return n
+		}
+	}
+	return n
+}
