@@ -6,9 +6,9 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/heyLu/mu"
+	"github.com/heyLu/mu/connection"
 	"github.com/heyLu/mu/database"
 	tx "github.com/heyLu/mu/transactor"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"time"
@@ -28,7 +28,7 @@ type pinboardPost struct {
 	URL     *url.URL  `xml:"href,attr"`
 }
 
-func ImportFromPinboard(pinboardXMLPath, dbUrl string) error {
+func ImportFromPinboard(pinboardXMLPath string, conn connection.Connection) error {
 	f, err := os.Open(pinboardXMLPath)
 	if err != nil {
 		return err
@@ -43,28 +43,6 @@ func ImportFromPinboard(pinboardXMLPath, dbUrl string) error {
 	}
 
 	fmt.Println(len(posts.Posts))
-
-	isNew, err := mu.CreateDatabase(dbUrl)
-	if err != nil {
-		return err
-	}
-
-	conn, err := mu.Connect(dbUrl)
-	if err != nil {
-		return err
-	}
-
-	if isNew {
-		schema, err := ioutil.ReadFile("schema.edn")
-		if err != nil {
-			return err
-		}
-
-		_, err = mu.TransactString(conn, string(schema))
-		if err != nil {
-			return err
-		}
-	}
 
 	n := 0
 	nextId := func() int {
