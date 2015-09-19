@@ -31,6 +31,12 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+	case "server":
+		conn := ConnectOrInit(config.dbUrl)
+		err := RunServer(conn)
+		if err != nil {
+			panic(err)
+		}
 	default:
 		fmt.Fprintf(os.Stderr, "unknown command '%s'\n", cmd)
 		os.Exit(1)
