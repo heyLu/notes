@@ -6,10 +6,12 @@ import (
 	"github.com/heyLu/mu/connection"
 	"github.com/heyLu/mu/database"
 	"github.com/heyLu/mu/index"
+	tx "github.com/heyLu/mu/transactor"
 	"html/template"
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 var serverConfig struct {
@@ -25,8 +27,53 @@ func RunServer(conn connection.Connection) error {
 	serverConfig.conn = conn
 
 	http.HandleFunc("/list", ListPosts)
+	http.HandleFunc("/new", func(w http.ResponseWriter, req *http.Request) {
+		switch req.Method {
+		case "GET":
+			CreatePost(w, req)
+		case "POST":
+			NewPost(w, req)
+		default:
+			status := http.StatusMethodNotAllowed
+			http.Error(w, http.StatusText(status), status)
+		}
+	})
 	fmt.Println("listening on", serverConfig.addr)
 	return http.ListenAndServe(serverConfig.addr, nil)
+}
+
+func CreatePost(w http.ResponseWriter, req *http.Request) {
+	createPostTemplate.Execute(w, nil)
+}
+
+func NewPost(w http.ResponseWriter, req *http.Request) {
+	err := req.ParseForm()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	title := req.FormValue("title")
+	content := req.FormValue("content")
+	date := time.Now().Round(time.Second)
+
+	txData := make([]tx.TxDatum, 1)
+	txData[0] = tx.TxMap{
+		Id: mu.Id(mu.Tempid(mu.DbPartUser, -1)),
+		Attributes: map[database.Keyword][]tx.Value{
+			mu.Keyword("note", "title"):   []tx.Value{tx.NewValue(title)},
+			mu.Keyword("note", "content"): []tx.Value{tx.NewValue(content)},
+			mu.Keyword("note", "date"):    []tx.Value{tx.NewValue(date)},
+		},
+	}
+
+	_, err = mu.Transact(serverConfig.conn, txData)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error:", err)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
+		return
+	}
 }
 
 func ListPosts(w http.ResponseWriter, req *http.Request) {
@@ -80,8 +127,79 @@ var templateFuncs = template.FuncMap{
 		return joined
 	},
 }
-var listPostsTemplate = template.Must(template.New("").Funcs(templateFuncs).Parse(listPostsTemplateStr))
 
+var createPostTemplate = template.Must(template.New("").Parse(createPostTemplateStr))
+var createPostTemplateStr = `<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Write a new post</title>
+		<style>
+		textarea {
+			width: 40em;
+			font-family: "Liberation Mono", monospace;
+			font-size: smaller;
+			white-space: pre-wrap;
+		}
+
+		.field label {
+			display: inline-block;
+			width: 5em;
+		}
+
+		.field input[type="text"], .field input[type="url"] {
+			width: 40em;
+		}
+
+		.field textarea {
+			height: 50vh;
+		}
+
+		.submit {
+			margin-top: 2em;
+			margin-left: 5em;
+		}
+		</style>
+	</head>
+
+	<body>
+		<form method="POST">
+			<div class="field">
+				<label for="url">url</label>
+				<input name="url" type="url" />
+			</div>
+			<div class="field">
+				<label for="title">title</label>
+				<input name="title" type="text" />
+			</div>
+			<div class="field">
+				<label for="content">content</label>
+				<textarea name="content"></textarea>
+			</div>
+			<div class="field">
+				<label for="tags">tags</label>
+				<input name="tags" type="text" />
+			</div>
+
+			<!--<div class="field">
+				<label for="private">private</label>
+				<input type="checkbox" name="private" checked />
+			</div>
+
+			<div class="field">
+				<label for="read-later">read later</label>
+				<input type="checkbox" name="read-later" />
+			</div>-->
+
+			<div class="submit">
+				<input type="submit" value="Create post" />
+			</div>
+		</form>
+	</body>
+</html>
+`
+
+var listPostsTemplate = template.Must(template.New("").Funcs(templateFuncs).Parse(listPostsTemplateStr))
 var listPostsTemplateStr = `<!doctype html>
 <html>
 	<head>
