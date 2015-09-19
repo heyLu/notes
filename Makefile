@@ -2,8 +2,8 @@ GOPATH=$(PWD)/.go
 
 all: notes
 
-notes: notes.go
-	GOPATH=$(GOPATH) go build notes.go
+notes: *.go
+	GOPATH=$(GOPATH) go build
 
 deps:
 	GOPATH=$(GOPATH) go get -v ./...
