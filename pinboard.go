@@ -27,7 +27,7 @@ type pinboardPost struct {
 	Content string    `xml:"extended,attr"`
 	Date    time.Time `xml:"time,attr"`
 	URL     *url.URL  `xml:"href,attr"`
-	Tags    string    `xml:tag,attr"`
+	Tags    string    `xml:"tag,attr"`
 }
 
 func ImportFromPinboard(pinboardXMLPath string, conn connection.Connection) error {
