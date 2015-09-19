@@ -50,6 +50,31 @@ func (p Post) Date() time.Time {
 	return p.Get(mu.Keyword("note", "date")).(time.Time)
 }
 
+func (p Post) Tags() []Tag {
+	rawTags := p.Get(mu.Keyword("note", "tags")).([]interface{})
+	if len(rawTags) == 0 {
+		return nil
+	}
+
+	tags := make([]Tag, len(rawTags))
+	for i, rawTag := range rawTags {
+		tags[i] = Tag{rawTag.(database.Entity)}
+	}
+	return tags
+}
+
+type Tag struct {
+	database.Entity
+}
+
+func (t Tag) Name() string {
+	return t.Get(mu.Keyword("tag", "name")).(string)
+}
+
+func (t Tag) String() string {
+	return t.Name()
+}
+
 func ListPosts(w http.ResponseWriter, req *http.Request) {
 	db := serverConfig.conn.Db()
 	posts := listPosts(db, fromQueryInt(req, "n", 100))
@@ -97,6 +122,7 @@ var listPostsTemplateStr = `<!doctype html>
 		<div class="post">
 			<h1>{{ .Title }}</h1>
 			<time>{{ .Date }}</time>
+			<div>{{ .Tags }}</div>
 			<pre>{{ .Content }}</pre>
 		</div>
 		{{ end }}
