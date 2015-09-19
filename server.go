@@ -206,6 +206,10 @@ var listPostsTemplateStr = `<!doctype html>
 		<meta charset="utf-8" />
 		<title>All posts</title>
 		<style>
+		.post h1 {
+			margin-bottom: 0;
+		}
+
 		.post pre {
 			max-width: 40em;
 			font-family: "Liberation Mono", monospace;
