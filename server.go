@@ -108,7 +108,25 @@ func listPosts(db *database.Db, n int) []Post {
 	return posts
 }
 
-var listPostsTemplate = template.Must(template.New("").Parse(listPostsTemplateStr))
+var templateFuncs = template.FuncMap{
+	"joinTags": func(tags []Tag) string {
+		if len(tags) == 0 {
+			return ""
+		}
+
+		joined := ""
+		first := true
+		for _, tag := range tags {
+			if !first {
+				joined += ", "
+			}
+			joined += tag.Name()
+			first = false
+		}
+		return joined
+	},
+}
+var listPostsTemplate = template.Must(template.New("").Funcs(templateFuncs).Parse(listPostsTemplateStr))
 
 var listPostsTemplateStr = `<!doctype html>
 <html>
@@ -122,7 +140,7 @@ var listPostsTemplateStr = `<!doctype html>
 		<div class="post">
 			<h1>{{ .Title }}</h1>
 			<time>{{ .Date }}</time>
-			<div>{{ .Tags }}</div>
+			{{ if .Tags }}<div>{{ .Tags | joinTags }}</div>{{ end }}
 			<pre>{{ .Content }}</pre>
 		</div>
 		{{ end }}
