@@ -29,7 +29,11 @@ type Post struct {
 }
 
 func main() {
-	f, err := os.Open(os.Args[1])
+	ImportFromPinboard(os.Args[1], "files://db?name=posts")
+}
+
+func ImportFromPinboard(pinboardXMLPath, dbUrl string) {
+	f, err := os.Open(pinboardXMLPath)
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +47,6 @@ func main() {
 
 	fmt.Println(len(posts.Posts))
 
-	dbUrl := "files://db?name=posts"
 	isNew, err := mu.CreateDatabase(dbUrl)
 	if err != nil {
 		panic(err)
