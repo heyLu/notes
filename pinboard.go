@@ -14,13 +14,13 @@ import (
 	"time"
 )
 
-type Posts struct {
-	XMLName xml.Name `xml:"posts"`
-	User    string   `xml:"user,attr"`
-	Posts   []Post   `xml:"post"`
+type pinboardPosts struct {
+	XMLName xml.Name       `xml:"posts"`
+	User    string         `xml:"user,attr"`
+	Posts   []pinboardPost `xml:"post"`
 }
 
-type Post struct {
+type pinboardPost struct {
 	XMLName xml.Name  `xml:"post"`
 	Title   string    `xml:"description,attr"`
 	Content string    `xml:"extended,attr"`
@@ -36,7 +36,7 @@ func ImportFromPinboard(pinboardXMLPath, dbUrl string) error {
 	defer f.Close()
 
 	decoder := xml.NewDecoder(f)
-	var posts Posts
+	var posts pinboardPosts
 	err = decoder.Decode(&posts)
 	if err != nil {
 		return err
