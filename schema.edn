@@ -27,6 +27,12 @@
   :db/index true
   :db.install/_attribute :db.part/db}
  {:db/id #db/id[:db.part/db]
+  :db/ident :note/url
+  :db/doc "The url the note is about. (optional)"
+  :db/valueType :db.type/uri
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+ {:db/id #db/id[:db.part/db]
   :db/ident :note/tags
   :db/doc "The tags attached to the note. (optional)"
   :db/valueType :db.type/ref

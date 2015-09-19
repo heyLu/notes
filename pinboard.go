@@ -26,7 +26,7 @@ type pinboardPost struct {
 	Title   string    `xml:"description,attr"`
 	Content string    `xml:"extended,attr"`
 	Date    time.Time `xml:"time,attr"`
-	URL     *url.URL  `xml:"href,attr"`
+	URL     string    `xml:"href,attr"`
 	Tags    string    `xml:"tag,attr"`
 }
 
@@ -74,6 +74,15 @@ func ImportFromPinboard(pinboardXMLPath string, conn connection.Connection) erro
 				mu.Keyword("note", "content"): []tx.Value{tx.NewValue(post.Content)},
 				mu.Keyword("note", "date"):    []tx.Value{tx.NewValue(post.Date)},
 			},
+		}
+
+		if post.URL != "" {
+			u, err := url.Parse(post.URL)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+			} else {
+				txDatum.Attributes[mu.Keyword("note", "url")] = []tx.Value{tx.NewValue(u)}
+			}
 		}
 
 		tags := strings.Split(post.Tags, " ")
