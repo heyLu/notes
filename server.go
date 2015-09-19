@@ -8,6 +8,7 @@ import (
 	"github.com/heyLu/mu/index"
 	"html/template"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"time"
@@ -48,6 +49,14 @@ func (p Post) Content() string {
 
 func (p Post) Date() time.Time {
 	return p.Get(mu.Keyword("note", "date")).(time.Time)
+}
+
+func (p Post) URL() *url.URL {
+	u := p.Get(mu.Keyword("note", "url"))
+	if u == nil {
+		return nil
+	}
+	return u.(*url.URL)
 }
 
 func (p Post) Tags() []Tag {
@@ -133,12 +142,24 @@ var listPostsTemplateStr = `<!doctype html>
 	<head>
 		<meta charset="utf-8" />
 		<title>All posts</title>
+		<style>
+		.post pre {
+			max-width: 40em;
+			font-family: "Liberation Mono", monospace;
+			font-size: smaller;
+			white-space: pre-wrap;
+		}
+		</style>
 	</head>
 
 	<body>
 		{{ range . }}
 		<div class="post">
+			{{ if .URL }}
+			<h1><a href="{{ .URL }}">{{ .Title }}</a></h1>
+			{{ else }}
 			<h1>{{ .Title }}</h1>
+			{{ end }}
 			<time>{{ .Date }}</time>
 			{{ if .Tags }}<div>{{ .Tags | joinTags }}</div>{{ end }}
 			<pre>{{ .Content }}</pre>
