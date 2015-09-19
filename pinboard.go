@@ -11,6 +11,7 @@ import (
 	tx "github.com/heyLu/mu/transactor"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -26,6 +27,7 @@ type pinboardPost struct {
 	Content string    `xml:"extended,attr"`
 	Date    time.Time `xml:"time,attr"`
 	URL     *url.URL  `xml:"href,attr"`
+	Tags    string    `xml:tag,attr"`
 }
 
 func ImportFromPinboard(pinboardXMLPath string, conn connection.Connection) error {
@@ -50,6 +52,18 @@ func ImportFromPinboard(pinboardXMLPath string, conn connection.Connection) erro
 		return n
 	}
 
+	tagIds := map[string]int{}
+	tagId := -1000000
+	nextTagId := func(tag string) int {
+		if id, ok := tagIds[tag]; ok {
+			return id
+		}
+
+		tagId -= 1
+		tagIds[tag] = tagId
+		return tagId
+	}
+
 	txData := make([]tx.TxDatum, 0)
 	for _, post := range posts.Posts {
 		txDatum := tx.TxMap{
@@ -60,6 +74,25 @@ func ImportFromPinboard(pinboardXMLPath string, conn connection.Connection) erro
 				mu.Keyword("note", "content"): []tx.Value{tx.NewValue(post.Content)},
 				mu.Keyword("note", "date"):    []tx.Value{tx.NewValue(post.Date)},
 			},
+		}
+
+		tags := strings.Split(post.Tags, " ")
+		tagValues := make([]tx.Value, len(tags))
+		for i, tag := range tags {
+			id := mu.Id(mu.Tempid(mu.DbPartUser, nextTagId(tag)))
+			tagValues[i] = tx.NewValue(id)
+		}
+		txDatum.Attributes[mu.Keyword("note", "tags")] = tagValues
+
+		txData = append(txData, txDatum)
+	}
+
+	for tag, id := range tagIds {
+		txDatum := tx.Datum{
+			Op: tx.Assert,
+			E:  mu.Id(mu.Tempid(mu.DbPartUser, id)),
+			A:  mu.Keyword("tag", "name"),
+			V:  tx.NewValue(tag),
 		}
 		txData = append(txData, txDatum)
 	}
