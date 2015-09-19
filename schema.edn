@@ -1,0 +1,43 @@
+[;; notes
+ {:db/id #db/id[:db.part/db]
+  :db/ident :note/id
+  :db/doc "The unique id identifying a note."
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/unique :db.unique/value
+  :db.install/_attribute :db.part/db}
+ {:db/id #db/id[:db.part/db]
+  :db/ident :note/title
+  :db/doc "The title describing the note. (optional)"
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  ;:db/fulltext true
+  :db.install/_attribute :db.part/db}
+ {:db/id #db/id[:db.part/db]
+  :db/ident :note/content
+  :db/doc "The content of the note."
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+ {:db/id #db/id[:db.part/db]
+  :db/ident :note/date
+  :db/doc "The date the note was created."
+  :db/valueType :db.type/instant
+  :db/cardinality :db.cardinality/many
+  :db/index true
+  :db.install/_attribute :db.part/db}
+ {:db/id #db/id[:db.part/db]
+  :db/ident :note/tags
+  :db/doc "The tags attached to the note. (optional)"
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/many
+  :db.install/_attribute :db.part/db}
+
+ ;; tags
+ {:db/id #db/id[:db.part/db]
+  :db/ident :tag/name
+  :db/doc "The name of the tag."
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/unique :db.unique/identity}
+ ]
