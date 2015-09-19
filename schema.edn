@@ -29,7 +29,7 @@
  {:db/id #db/id[:db.part/db]
   :db/ident :note/tags
   :db/doc "The tags attached to the note. (optional)"
-  :db/valueType :db.type/string
+  :db/valueType :db.type/ref
   :db/cardinality :db.cardinality/many
   :db.install/_attribute :db.part/db}
 
