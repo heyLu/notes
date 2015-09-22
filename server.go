@@ -61,6 +61,7 @@ func NewPost(w http.ResponseWriter, req *http.Request) {
 	txData[0] = tx.TxMap{
 		Id: mu.Id(mu.Tempid(mu.DbPartUser, -1)),
 		Attributes: map[database.Keyword][]tx.Value{
+			mu.Keyword("note", "id"):      []tx.Value{tx.NewValue(generateId())},
 			mu.Keyword("note", "title"):   []tx.Value{tx.NewValue(title)},
 			mu.Keyword("note", "content"): []tx.Value{tx.NewValue(content)},
 			mu.Keyword("note", "date"):    []tx.Value{tx.NewValue(date)},
