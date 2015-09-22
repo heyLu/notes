@@ -112,6 +112,8 @@ func NewPost(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, http.StatusText(status), status)
 		return
 	}
+
+	http.Redirect(w, req, "/notes", http.StatusSeeOther)
 }
 
 func ListPosts(w http.ResponseWriter, req *http.Request) {
