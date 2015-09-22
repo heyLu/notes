@@ -37,6 +37,12 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+	case "import-json":
+		conn := ConnectOrInit(config.dbUrl)
+		err := ImportFromJSON(args[0], conn)
+		if err != nil {
+			panic(err)
+		}
 	case "server":
 		conn := ConnectOrInit(config.dbUrl)
 		err := RunServer(conn)
