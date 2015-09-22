@@ -80,7 +80,14 @@ func NewPost(w http.ResponseWriter, req *http.Request) {
 func ListPosts(w http.ResponseWriter, req *http.Request) {
 	db := serverConfig.conn.Db()
 	posts := listPosts(db, fromQueryInt(req, "n", 100))
-	listPostsTemplate.Execute(w, posts)
+	data := struct {
+		Title string
+		Posts []Post
+	}{
+		"All posts",
+		posts,
+	}
+	listPostsTemplate.Execute(w, data)
 }
 
 func listPosts(db *database.Db, n int) []Post {
@@ -205,7 +212,7 @@ var listPostsTemplateStr = `<!doctype html>
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>All posts</title>
+		<title>{{ .Title }}</title>
 		<style>
 		.post h1 {
 			margin-bottom: 0;
@@ -221,7 +228,7 @@ var listPostsTemplateStr = `<!doctype html>
 	</head>
 
 	<body>
-		{{ range . }}
+		{{ range .Posts }}
 		<div class="post">
 			{{ if .URL }}
 			<h1><a href="{{ .URL }}">{{ .Title }}</a></h1>
