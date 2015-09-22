@@ -251,6 +251,14 @@ var listPostsTemplateStr = `<!doctype html>
 		<meta charset="utf-8" />
 		<title>{{ .Title }}</title>
 		<style>
+		#new-note {
+			position: fixed;
+			left: 60em;
+			top: 0;
+			padding: 1ex;
+			background-color: #eee;
+		}
+
 		.post .permalink {
 			float: left;
 			padding: 0.5ex;
@@ -270,6 +278,8 @@ var listPostsTemplateStr = `<!doctype html>
 	</head>
 
 	<body>
+		<a id="new-note" href="/new">Write a note</a>
+
 		{{ range .Posts }}
 		<div class="post">
 			<a class="permalink" href="/notes/{{ .Id }}">⚓</a>
