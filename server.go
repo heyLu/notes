@@ -27,8 +27,8 @@ func init() {
 func RunServer(conn connection.Connection) error {
 	serverConfig.conn = conn
 
-	http.HandleFunc("/note/", GetPost)
-	http.HandleFunc("/list", ListPosts)
+	http.HandleFunc("/notes/", GetPost)
+	http.HandleFunc("/notes", ListPosts)
 	http.HandleFunc("/new", func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
 		case "GET":
@@ -272,7 +272,7 @@ var listPostsTemplateStr = `<!doctype html>
 	<body>
 		{{ range .Posts }}
 		<div class="post">
-			<a class="permalink" href="/note/{{ .Id }}">⚓</a>
+			<a class="permalink" href="/notes/{{ .Id }}">⚓</a>
 			{{ if .URL }}
 			<h1><a href="{{ .URL }}">{{ .Title }}</a></h1>
 			{{ else }}
