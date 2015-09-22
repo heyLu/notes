@@ -27,6 +27,15 @@ func init() {
 func RunServer(conn connection.Connection) error {
 	serverConfig.conn = conn
 
+	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+		if req.URL.Path == "/" {
+			http.Redirect(w, req, "/new", http.StatusSeeOther)
+			return
+		}
+
+		status := http.StatusNotFound
+		http.Error(w, http.StatusText(status), status)
+	})
 	http.HandleFunc("/notes/", GetPost)
 	http.HandleFunc("/notes", ListPosts)
 	http.HandleFunc("/new", func(w http.ResponseWriter, req *http.Request) {
