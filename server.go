@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -26,6 +27,7 @@ func init() {
 func RunServer(conn connection.Connection) error {
 	serverConfig.conn = conn
 
+	http.HandleFunc("/note/", GetPost)
 	http.HandleFunc("/list", ListPosts)
 	http.HandleFunc("/new", func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
@@ -40,6 +42,41 @@ func RunServer(conn connection.Connection) error {
 	})
 	fmt.Println("listening on", serverConfig.addr)
 	return http.ListenAndServe(serverConfig.addr, nil)
+}
+
+func GetPost(w http.ResponseWriter, req *http.Request) {
+	parts := strings.SplitN(req.URL.Path, "/", 3)
+	if len(parts) != 3 || parts[2] == "" {
+		status := http.StatusBadRequest
+		http.Error(w, http.StatusText(status), status)
+		return
+	}
+	noteId := parts[2]
+
+	db := serverConfig.conn.Db()
+	aid := db.Entid(mu.Keyword("note", "id"))
+	if aid == -1 {
+		panic("db not initialized")
+	}
+	minDatom := index.NewDatom(index.MinDatom.E(), aid, noteId, index.MinDatom.Tx(), index.MinDatom.Added())
+	maxDatom := index.NewDatom(index.MaxDatom.E(), aid, noteId, index.MaxDatom.Tx(), index.MaxDatom.Added())
+	iter := db.Avet().DatomsAt(minDatom, maxDatom)
+	datom := iter.Next()
+	if datom == nil {
+		status := http.StatusNotFound
+		http.Error(w, http.StatusText(status), status)
+		return
+	}
+
+	post := Post{db.Entity(datom.E())}
+	data := struct {
+		Title string
+		Posts []Post
+	}{
+		post.Title(),
+		[]Post{post},
+	}
+	listPostsTemplate.Execute(w, data)
 }
 
 func CreatePost(w http.ResponseWriter, req *http.Request) {
@@ -214,6 +251,11 @@ var listPostsTemplateStr = `<!doctype html>
 		<meta charset="utf-8" />
 		<title>{{ .Title }}</title>
 		<style>
+		.post .permalink {
+			float: left;
+			padding: 0.5ex;
+		}
+
 		.post h1 {
 			margin-bottom: 0;
 		}
@@ -230,6 +272,7 @@ var listPostsTemplateStr = `<!doctype html>
 	<body>
 		{{ range .Posts }}
 		<div class="post">
+			<a class="permalink" href="/note/{{ .Id }}">⚓</a>
 			{{ if .URL }}
 			<h1><a href="{{ .URL }}">{{ .Title }}</a></h1>
 			{{ else }}
