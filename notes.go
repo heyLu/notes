@@ -25,7 +25,7 @@ func main() {
 	cmd := os.Args[1]
 	args := os.Args[2:]
 	switch cmd {
-	case "import":
+	case "import-pinboard":
 		conn := ConnectOrInit(config.dbUrl)
 		err := ImportFromPinboard(args[0], conn)
 		if err != nil {
