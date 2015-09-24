@@ -1,0 +1,154 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Write a note!</title>
+
+		<link rel="stylesheet" href="codemirror/lib/codemirror.css" />
+		<link rel="stylesheet" href="codemirror/addon/scroll/simplescrollbars.css" />
+		<style>
+		body {
+			display: flex;
+			height: 100vh;
+			margin: 0;
+
+			font-family: "Liberation Mono", monospace;
+			font-size: smaller;
+		}
+
+		#editor {
+			flex-grow: 5;
+
+			display: flex;
+			justify-content: center;
+
+			position: relative;
+		}
+
+		#editor .CodeMirror {
+			width: 50em;
+			height: 100%;
+
+			font-family: "Liberation Mono", monospace;
+			font-size: 120%;
+		}
+		
+		#editor .CodeMirror span {
+			color: black;
+		}
+
+		#editor-stats {
+			position: absolute;
+			bottom: 0;
+			right: 0;
+
+			padding: 0.25em 0.5em;
+		}
+
+		#editor-stats span {
+			margin: 0 3em;
+		}
+
+		#sidebar {
+			padding: 1em;
+			background-color: #999;
+		}
+
+		.field label {
+			display: inline-block;
+			width: 3em;
+		}
+
+		.field input {
+			width: 20em;
+		}
+		</style>
+	</head>
+
+	<body>
+		<div id="editor">
+			<div id="editor-stats">
+				<span id="stats-words">0 words</span>
+				<span id="stats-chars">0 characters</span>
+				<span id="stats-time">0 minutes</span>
+			</div>
+		</div>
+
+		<div id="sidebar">
+			<div class="field">
+				<label>url</label>
+				<input id="url" type="url" />
+			</div>
+			<div class="field">
+				<label>title</label>
+				<input id="title" type="text" required />
+			</div>
+			<div class="field">
+				<label>tags</label>
+				<input id="tags" type="text" />
+			</div>
+		</div>
+
+		<script src="codemirror/lib/codemirror.js"></script>
+		<script src="codemirror/mode/markdown/markdown.js"></script>
+		<script src="codemirror/addon/scroll/simplescrollbars.js"></script>
+		<script>
+			var editorEl = document.querySelector("#editor");
+			var codeMirror = new CodeMirror(editorEl, {
+				value: `# Hey there
+
+What *is* going on, after all?
+
+Is something *bad*????
+
+1. One
+2. Three
+3. Two
+
+And
+so
+on
+
+(Have **FUN!**)
+
+[Links](https://lin.ks) are fun as well, aren't they?`,
+				lineWrapping: true,
+				scrollbarStyle: "overlay",
+				autofocus: true,
+			});
+
+			var wordsPerMinute = 270;
+			function getStats() {
+				var numWords = codeMirror.getValue()
+					.split(/\s/)
+					.filter((word) => word.match(/\w/))
+					.length;
+
+				return {
+					numWords: numWords,
+					numCharacters: codeMirror.getValue()
+						.split("")
+						.filter((ch) => ch.match(/[^\s]/))
+						.length,
+					numMinutes: Math.ceil(numWords / wordsPerMinute),
+				};
+			}
+
+			var wordStatsEl = document.querySelector("#stats-words");
+			var charStatsEl = document.querySelector("#stats-chars");
+			var timeStatsEl = document.querySelector("#stats-time");
+
+			function displayStats() {
+				var stats = getStats();
+				wordStatsEl.textContent = `${stats.numWords} words`;
+				charStatsEl.textContent = `${stats.numCharacters} characters`;
+				timeStatsEl.textContent = `${stats.numMinutes} ${stats.numMinutes == 1 ? "minute" : "minutes"}`;
+			}
+
+			displayStats();
+			codeMirror.on('change', function(ev) {
+				displayStats();
+			});
+		</script>
+	</body>
+</html>
