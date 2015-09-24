@@ -132,7 +132,7 @@ func ListPosts(w http.ResponseWriter, req *http.Request) {
 		Title string
 		Posts []Post
 	}{
-		"All posts",
+		"All notes",
 		posts,
 	}
 	listPostsTemplate.Execute(w, data)
