@@ -95,27 +95,34 @@
 		<script>
 			var editorEl = document.querySelector("#editor");
 			var codeMirror = new CodeMirror(editorEl, {
-				value: `# Hey there
-
-What *is* going on, after all?
-
-Is something *bad*????
-
-1. One
-2. Three
-3. Two
-
-And
-so
-on
-
-(Have **FUN!**)
-
-[Links](https://lin.ks) are fun as well, aren't they?`,
 				lineWrapping: true,
 				scrollbarStyle: "overlay",
 				autofocus: true,
 			});
+
+			var savedName = `notes|${location.href}`;
+			function saveDocument() {
+				localStorage[savedName] = codeMirror.getValue();
+			}
+
+			function getSavedDocument() {
+				return localStorage[savedName];
+			}
+
+			var needsSave = false;
+			function scheduleSave() {
+				if (needsSave) {
+					console.log("saving document");
+					saveDocument();
+					needsSave = false;
+				}
+				setTimeout(scheduleSave, 10000);
+			}
+			setTimeout(scheduleSave, 10000);
+
+			if (codeMirror.getValue() == "") {
+				codeMirror.setValue(getSavedDocument() || "");
+			}
 
 			var titleEl = document.querySelector("#title");
 
@@ -166,6 +173,8 @@ on
 				if (change.from.line == 0) {
 					updateTitle();
 				}
+
+				needsSave = true;
 			});
 		</script>
 	</body>
