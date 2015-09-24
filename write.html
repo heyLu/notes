@@ -160,8 +160,8 @@
 
 			function displayStats() {
 				var stats = getStats();
-				wordStatsEl.textContent = `${stats.numWords} words`;
-				charStatsEl.textContent = `${stats.numCharacters} characters`;
+				wordStatsEl.textContent = `${stats.numWords} ${stats.numWords == 1 ? "word" : "words"}`;
+				charStatsEl.textContent = `${stats.numCharacters} ${stats.numCharacters == 1 ? "character" : "characters"}`;
 				timeStatsEl.textContent = `${stats.numMinutes} ${stats.numMinutes == 1 ? "minute" : "minutes"}`;
 			}
 
