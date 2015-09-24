@@ -51,6 +51,10 @@ func RunServer(conn connection.Connection) error {
 		}
 	})
 	http.HandleFunc("/tags", ListTags)
+	http.HandleFunc("/tags/test", GetTagsTest)
+	http.HandleFunc("/tags/test.js", func(w http.ResponseWriter, req *http.Request) {
+		http.ServeFile(w, req, "tags-test.js")
+	})
 	fmt.Println("listening on", serverConfig.addr)
 	return http.ListenAndServe(serverConfig.addr, nil)
 }
@@ -201,6 +205,25 @@ func listTags(db *database.Db) ([]string, error) {
 
 	return tags, nil
 }
+
+func GetTagsTest(w http.ResponseWriter, req *http.Request) {
+	tagsTestTemplate.Execute(w, nil)
+}
+
+var tagsTestTemplate = template.Must(template.New("").Parse(tagsTestTemplateStr))
+var tagsTestTemplateStr = `<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>tags test</title>
+	</head>
+
+	<body>
+		<input id="tags" type="text" size="30" />
+		<script src="/tags/test.js"></script>
+	</body>
+</html>
+`
 
 var templateFuncs = template.FuncMap{
 	"joinTags": func(tags []Tag) string {
