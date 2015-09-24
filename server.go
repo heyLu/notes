@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/heyLu/mu"
 	"github.com/heyLu/mu/connection"
@@ -49,6 +50,7 @@ func RunServer(conn connection.Connection) error {
 			http.Error(w, http.StatusText(status), status)
 		}
 	})
+	http.HandleFunc("/tags", ListTags)
 	fmt.Println("listening on", serverConfig.addr)
 	return http.ListenAndServe(serverConfig.addr, nil)
 }
@@ -163,6 +165,41 @@ func listPosts(db *database.Db, n int) []Post {
 	}
 
 	return posts
+}
+
+func ListTags(w http.ResponseWriter, req *http.Request) {
+	tags, err := listTags(serverConfig.conn.Db())
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error:", err)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
+		return
+	}
+
+	encoder := json.NewEncoder(w)
+	err = encoder.Encode(tags)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error:", err)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
+	}
+}
+
+func listTags(db *database.Db) ([]string, error) {
+	aid := db.Entid(mu.Keyword("tag", "name"))
+	if aid == -1 {
+		panic("db not initialized")
+	}
+	minDatom := index.NewDatom(index.MinDatom.E(), aid, index.MinValue, index.MinDatom.Tx(), index.MinDatom.Added())
+	maxDatom := index.NewDatom(index.MaxDatom.E(), aid, index.MaxValue, index.MaxDatom.Tx(), index.MaxDatom.Added())
+	iter := db.Avet().DatomsAt(minDatom, maxDatom)
+
+	tags := make([]string, 0)
+	for datom := iter.Next(); datom != nil; datom = iter.Next() {
+		tags = append(tags, datom.V().Val().(string))
+	}
+
+	return tags, nil
 }
 
 var templateFuncs = template.FuncMap{
