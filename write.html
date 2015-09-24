@@ -117,6 +117,19 @@ on
 				autofocus: true,
 			});
 
+			var titleEl = document.querySelector("#title");
+
+			function updateTitle() {
+				var firstLine = codeMirror.getLine(0);
+				var title = "";
+				if (firstLine.startsWith("# ")) {
+					title = firstLine.substr(2);
+				}
+
+				document.title = `${title} - notes`;
+				titleEl.value = title;
+			}
+
 			var wordsPerMinute = 250;
 			function getStats() {
 				var numWords = codeMirror.getValue()
@@ -146,8 +159,13 @@ on
 			}
 
 			displayStats();
-			codeMirror.on('change', function(ev) {
+			updateTitle();
+			codeMirror.on('change', function(cm, change) {
 				displayStats();
+
+				if (change.from.line == 0) {
+					updateTitle();
+				}
 			});
 		</script>
 	</body>
