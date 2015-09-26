@@ -364,6 +364,15 @@ var listPostsTemplateStr = `<!doctype html>
 			<pre>{{ .Content }}</pre>
 		</div>
 		{{ end }}
+
+		<script>
+			window.addEventListener("keydown", function(ev) {
+				if (ev.ctrlKey && ev.key == "n") {
+					ev.preventDefault();
+					window.location = "/new";
+				}
+			});
+		</script>
 	</body>
 </html>
 `
