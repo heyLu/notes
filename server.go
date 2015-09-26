@@ -116,6 +116,16 @@ func NewPost(w http.ResponseWriter, req *http.Request) {
 	txData[2] = tx.Datum{Op: tx.Assert, E: noteId, A: mu.Keyword("note", "content"), V: tx.NewValue(content)}
 	txData[3] = tx.Datum{Op: tx.Assert, E: noteId, A: mu.Keyword("note", "date"), V: tx.NewValue(date)}
 
+	url := req.FormValue("url")
+	if url != "" {
+		txData = append(txData, tx.Datum{
+			Op: tx.Assert,
+			E:  noteId,
+			A:  mu.Keyword("note", "url"),
+			V:  tx.NewValue(url),
+		})
+	}
+
 	_, err = mu.Transact(serverConfig.conn, txData)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error:", err)
