@@ -126,6 +126,20 @@ func NewPost(w http.ResponseWriter, req *http.Request) {
 		})
 	}
 
+	n := -100
+	rawTags := req.FormValue("tags")
+	for _, tag := range strings.Split(rawTags, " ") {
+		if tag == "" {
+			continue
+		}
+
+		tagId := mu.Id(mu.Tempid(mu.DbPartUser, n))
+		txData = append(txData,
+			tx.Datum{Op: tx.Assert, E: noteId, A: mu.Keyword("note", "tags"), V: tx.NewValue(tagId)},
+			tx.Datum{Op: tx.Assert, E: tagId, A: mu.Keyword("tag", "name"), V: tx.NewValue(tag)})
+		n -= 1
+	}
+
 	_, err = mu.Transact(serverConfig.conn, txData)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error:", err)
