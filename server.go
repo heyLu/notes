@@ -109,16 +109,12 @@ func NewPost(w http.ResponseWriter, req *http.Request) {
 	content := req.FormValue("content")
 	date := time.Now().Round(time.Second)
 
-	txData := make([]tx.TxDatum, 1)
-	txData[0] = tx.TxMap{
-		Id: mu.Id(mu.Tempid(mu.DbPartUser, -1)),
-		Attributes: map[database.Keyword][]tx.Value{
-			mu.Keyword("note", "id"):      []tx.Value{tx.NewValue(generateId())},
-			mu.Keyword("note", "title"):   []tx.Value{tx.NewValue(title)},
-			mu.Keyword("note", "content"): []tx.Value{tx.NewValue(content)},
-			mu.Keyword("note", "date"):    []tx.Value{tx.NewValue(date)},
-		},
-	}
+	noteId := mu.Id(mu.Tempid(mu.DbPartUser, -1))
+	txData := make([]tx.TxDatum, 4)
+	txData[0] = tx.Datum{Op: tx.Assert, E: noteId, A: mu.Keyword("note", "id"), V: tx.NewValue(generateId())}
+	txData[1] = tx.Datum{Op: tx.Assert, E: noteId, A: mu.Keyword("note", "title"), V: tx.NewValue(title)}
+	txData[2] = tx.Datum{Op: tx.Assert, E: noteId, A: mu.Keyword("note", "content"), V: tx.NewValue(content)}
+	txData[3] = tx.Datum{Op: tx.Assert, E: noteId, A: mu.Keyword("note", "date"), V: tx.NewValue(date)}
 
 	_, err = mu.Transact(serverConfig.conn, txData)
 	if err != nil {
