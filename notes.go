@@ -14,7 +14,7 @@ var config struct {
 }
 
 func init() {
-	config.dbUrl = "files://db?name=posts"
+	flag.StringVar(&config.dbUrl, "db", "files://db?name=posts", "The database to use")
 }
 
 func main() {
