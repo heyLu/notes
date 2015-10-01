@@ -1,5 +1,6 @@
 /.go
 /notes
 /db
+/*.db
 /pinboard.xml
 /codemirror
