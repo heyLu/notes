@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/heyLu/mu"
 	"github.com/heyLu/mu/connection"
@@ -17,13 +18,15 @@ func init() {
 }
 
 func main() {
-	if len(os.Args) < 2 {
+	flag.Parse()
+
+	if flag.NArg() < 1 {
 		fmt.Fprintf(os.Stderr, "Usage: %s <cmd> [<args>]\n", os.Args[0])
 		os.Exit(1)
 	}
 
-	cmd := os.Args[1]
-	args := os.Args[2:]
+	cmd := flag.Arg(0)
+	args := flag.Args()[1:]
 	switch cmd {
 	case "import-pinboard":
 		conn := ConnectOrInit(config.dbUrl)
