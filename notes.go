@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/heyLu/mu"
 	"github.com/heyLu/mu/connection"
+	_ "github.com/heyLu/mu/store/bolt"
+	_ "github.com/heyLu/mu/store/sqlite"
 	"io/ioutil"
 	"os"
 )
