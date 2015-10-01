@@ -154,6 +154,17 @@ func NewPost(w http.ResponseWriter, req *http.Request) {
 func ListPosts(w http.ResponseWriter, req *http.Request) {
 	db := serverConfig.conn.Db()
 	posts := listPosts(db, fromQueryInt(req, "n", 100))
+	if req.Header.Get("Accept") == "application/json" {
+		encoder := json.NewEncoder(w)
+		err := encoder.Encode(posts)
+		if err != nil {
+			fmt.Fprint(os.Stderr, "Error: ", err)
+			status := http.StatusInternalServerError
+			http.Error(w, http.StatusText(status), status)
+		}
+		return
+	}
+
 	data := struct {
 		Title string
 		Posts []Post
