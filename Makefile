@@ -6,7 +6,7 @@ notes: *.go
 	GOPATH=$(GOPATH) go build
 
 deps:
-	GOPATH=$(GOPATH) go get -v ./...
+	GOPATH=$(GOPATH) go list -f '{{ join .Imports "\n" }}' ./... | sort | uniq | xargs go get -v
 
 clean:
 	rm -f notes
