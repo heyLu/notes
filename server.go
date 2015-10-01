@@ -142,7 +142,7 @@ func NewPost(w http.ResponseWriter, req *http.Request) {
 
 	_, err = mu.Transact(serverConfig.conn, txData)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error:", err)
+		fmt.Fprint(os.Stderr, "Error: ", err)
 		status := http.StatusInternalServerError
 		http.Error(w, http.StatusText(status), status)
 		return
@@ -194,7 +194,7 @@ func listPosts(db *database.Db, n int) []Post {
 func ListTags(w http.ResponseWriter, req *http.Request) {
 	tags, err := listTags(serverConfig.conn.Db())
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error:", err)
+		fmt.Fprint(os.Stderr, "Error: ", err)
 		status := http.StatusInternalServerError
 		http.Error(w, http.StatusText(status), status)
 		return
@@ -203,7 +203,7 @@ func ListTags(w http.ResponseWriter, req *http.Request) {
 	encoder := json.NewEncoder(w)
 	err = encoder.Encode(tags)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error:", err)
+		fmt.Fprint(os.Stderr, "Error: ", err)
 		status := http.StatusInternalServerError
 		http.Error(w, http.StatusText(status), status)
 	}
