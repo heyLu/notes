@@ -1,5 +1,6 @@
 var xhr = new XMLHttpRequest();
 xhr.open('GET', '/tags');
+xhr.setRequestHeader('Accept', 'application/json');
 xhr.onload = function(ev) {
 	window.tags = JSON.parse(xhr.responseText);
 }

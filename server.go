@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"./renderable"
 )
 
 var serverConfig struct {
@@ -50,7 +52,7 @@ func RunServer(conn connection.Connection) error {
 			http.Error(w, http.StatusText(status), status)
 		}
 	})
-	http.HandleFunc("/tags", ListTags)
+	http.HandleFunc("/tags", renderable.HandleRequest(ListTags))
 	http.HandleFunc("/tags/test", GetTagsTest)
 	http.HandleFunc("/tags/test.js", func(w http.ResponseWriter, req *http.Request) {
 		http.ServeFile(w, req, "tags-test.js")
@@ -202,25 +204,9 @@ func listPosts(db *database.Db, n int) []Post {
 	return posts
 }
 
-func ListTags(w http.ResponseWriter, req *http.Request) {
-	tags, err := listTags(serverConfig.conn.Db())
-	if err != nil {
-		fmt.Fprint(os.Stderr, "Error: ", err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
-		return
-	}
+func ListTags(w http.ResponseWriter, req *http.Request) (interface{}, error) {
+	db := serverConfig.conn.Db()
 
-	encoder := json.NewEncoder(w)
-	err = encoder.Encode(tags)
-	if err != nil {
-		fmt.Fprint(os.Stderr, "Error: ", err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
-	}
-}
-
-func listTags(db *database.Db) ([]string, error) {
 	aid := db.Entid(mu.Keyword("tag", "name"))
 	if aid == -1 {
 		panic("db not initialized")
@@ -234,7 +220,7 @@ func listTags(db *database.Db) ([]string, error) {
 		tags = append(tags, datom.V().Val().(string))
 	}
 
-	return tags, nil
+	return renderable.Renderable{Data: tags}, nil
 }
 
 func GetTagsTest(w http.ResponseWriter, req *http.Request) {
