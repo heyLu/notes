@@ -1,3 +1,16 @@
+// Package renderable makes APIs responses more convenient.
+//
+// Responses can be rendered as multiple content types.  HTML is the
+// default, but any supported content type can be selected via content
+// negotiation.
+//
+//  http.handleFunc("/names", HandleRequest(ListNames))
+//
+//  func ListNames(w http.ResponseWriter, req *http.Request) (interface{}, error) {
+//    return Renderable{
+//      Data: []string{"Jane", "Joe", "Ann", "Pip"},
+//    }, nil
+//  }
 package renderable
 
 import (
