@@ -236,7 +236,7 @@ var tagsTestTemplateStr = `<!doctype html>
 	</head>
 
 	<body>
-		<input id="tags" type="text" size="30" />
+		<input id="tags" type="text" size="30" autocomplete="off" />
 		<script src="/tags/test.js"></script>
 	</body>
 </html>
