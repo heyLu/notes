@@ -1,11 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/heyLu/mu"
 	"github.com/heyLu/mu/connection"
-	"github.com/heyLu/mu/database"
 	"github.com/heyLu/mu/index"
 	tx "github.com/heyLu/mu/transactor"
 	"html/template"
@@ -39,8 +37,8 @@ func RunServer(conn connection.Connection) error {
 		status := http.StatusNotFound
 		http.Error(w, http.StatusText(status), status)
 	})
-	http.HandleFunc("/notes/", GetPost)
-	http.HandleFunc("/notes", ListPosts)
+	http.HandleFunc("/notes/", renderable.HandleRequest(GetPost))
+	http.HandleFunc("/notes", renderable.HandleRequest(ListPosts))
 	http.HandleFunc("/new", func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
 		case "GET":
@@ -61,12 +59,10 @@ func RunServer(conn connection.Connection) error {
 	return http.ListenAndServe(serverConfig.addr, nil)
 }
 
-func GetPost(w http.ResponseWriter, req *http.Request) {
+func GetPost(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 	parts := strings.SplitN(req.URL.Path, "/", 3)
 	if len(parts) != 3 || parts[2] == "" {
-		status := http.StatusBadRequest
-		http.Error(w, http.StatusText(status), status)
-		return
+		return renderable.RenderableStatus(http.StatusBadRequest), nil
 	}
 	noteId := parts[2]
 
@@ -80,20 +76,17 @@ func GetPost(w http.ResponseWriter, req *http.Request) {
 	iter := db.Avet().DatomsAt(minDatom, maxDatom)
 	datom := iter.Next()
 	if datom == nil {
-		status := http.StatusNotFound
-		http.Error(w, http.StatusText(status), status)
-		return
+		return renderable.RenderableStatus(http.StatusNotFound), nil
 	}
 
 	post := Post{db.Entity(datom.E())}
-	data := struct {
-		Title string
-		Posts []Post
-	}{
-		post.Title(),
-		[]Post{post},
-	}
-	listPostsTemplate.Execute(w, data)
+	return renderable.Renderable{
+		Metadata: map[string]interface{}{
+			"Title": post.Title(),
+		},
+		Data:     []Post{post},
+		Template: listPostsTemplate,
+	}, nil
 }
 
 func CreatePost(w http.ResponseWriter, req *http.Request) {
@@ -153,31 +146,9 @@ func NewPost(w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, "/notes", http.StatusSeeOther)
 }
 
-func ListPosts(w http.ResponseWriter, req *http.Request) {
+func ListPosts(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 	db := serverConfig.conn.Db()
-	posts := listPosts(db, fromQueryInt(req, "n", 100))
-	if req.Header.Get("Accept") == "application/json" {
-		encoder := json.NewEncoder(w)
-		err := encoder.Encode(posts)
-		if err != nil {
-			fmt.Fprint(os.Stderr, "Error: ", err)
-			status := http.StatusInternalServerError
-			http.Error(w, http.StatusText(status), status)
-		}
-		return
-	}
 
-	data := struct {
-		Title string
-		Posts []Post
-	}{
-		"All notes",
-		posts,
-	}
-	listPostsTemplate.Execute(w, data)
-}
-
-func listPosts(db *database.Db, n int) []Post {
 	id := db.Entid(mu.Keyword("note", "date"))
 	if id == -1 {
 		fmt.Fprintf(os.Stderr, "Error: :note/date not present\n")
@@ -196,12 +167,19 @@ func listPosts(db *database.Db, n int) []Post {
 
 	posts := make([]Post, 0)
 	l := len(postIds)
+	n := fromQueryInt(req, "n", 100)
 	for i := 0; i < l && i < n; i++ {
 		entity := db.Entity(postIds[l-i-1])
 		posts = append(posts, Post{entity})
 	}
 
-	return posts
+	return renderable.Renderable{
+		Metadata: map[string]interface{}{
+			"Title": "All notes",
+		},
+		Data:     posts,
+		Template: listPostsTemplate,
+	}, nil
 }
 
 func ListTags(w http.ResponseWriter, req *http.Request) (interface{}, error) {
@@ -337,7 +315,7 @@ var listPostsTemplateStr = `<!doctype html>
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>{{ .Title }}</title>
+		<title>{{ .Metadata.Title }}</title>
 		<style>
 		#new-note {
 			position: fixed;
@@ -368,7 +346,7 @@ var listPostsTemplateStr = `<!doctype html>
 	<body>
 		<a id="new-note" href="/new">Write a note</a>
 
-		{{ range .Posts }}
+		{{ range .Data }}
 		<div class="post">
 			<a class="permalink" href="/notes/{{ .Id }}">⚓</a>
 			{{ if .URL }}
