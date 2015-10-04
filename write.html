@@ -163,6 +163,10 @@
 
 				document.title = `${title} - notes`;
 				titleEl.value = title;
+
+				var loc = new URL(location.href);
+				loc.search = `?title=${title}`;
+				history.replaceState({}, document.title, loc.toString());
 			}
 
 			function updateDocument() {
