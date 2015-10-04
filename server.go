@@ -245,68 +245,50 @@ var createPostTemplateStr = `<!doctype html>
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>Write a new post</title>
-		<style>
-		textarea {
-			width: 40em;
-			font-family: "Liberation Mono", monospace;
-			font-size: smaller;
-			white-space: pre-wrap;
-		}
+		<title>Write a note!</title>
 
-		.field label {
-			display: inline-block;
-			width: 5em;
-		}
-
-		.field input[type="text"], .field input[type="url"] {
-			width: 40em;
-		}
-
-		.field textarea {
-			height: 50vh;
-		}
-
-		.submit {
-			margin-top: 2em;
-			margin-left: 5em;
-		}
-		</style>
+		<link rel="stylesheet" href="/static/codemirror/lib/codemirror.css" />
+		<link rel="stylesheet" href="/static/codemirror/addon/scroll/simplescrollbars.css" />
+		<link rel="stylesheet" href="/static/write.css" />
 	</head>
 
 	<body>
-		<form method="POST">
-			<div class="field">
-				<label for="url">url</label>
-				<input name="url" type="url" />
+		<div id="editor">
+			<div id="editor-stats">
+				<span id="stats-words">0 words</span>
+				<span id="stats-chars">0 characters</span>
+				<span id="stats-time">0 minutes</span>
 			</div>
-			<div class="field">
-				<label for="title">title</label>
-				<input name="title" type="text" />
-			</div>
-			<div class="field">
-				<label for="content">content</label>
-				<textarea name="content"></textarea>
-			</div>
-			<div class="field">
-				<label for="tags">tags</label>
-				<input name="tags" type="text" />
-			</div>
+		</div>
 
-			<!--<div class="field">
-				<label for="private">private</label>
-				<input type="checkbox" name="private" checked />
-			</div>
+		<div id="sidebar">
+			<form method="POST" action="/new">
+				<div class="field">
+					<label for="url">url</label>
+					<input id="url" name="url" type="url" />
+				</div>
+				<div class="field">
+					<label for="title">title</label>
+					<input id="title" name="title" type="text" required />
+				</div>
+				<div class="field">
+					<label for="tags">tags</label>
+					<input id="tags" name="tags" type="text" />
+				</div>
 
-			<div class="field">
-				<label for="read-later">read later</label>
-				<input type="checkbox" name="read-later" />
-			</div>-->
+				<input id="content" name="content" type="hidden" />
 
-			<div class="submit">
-				<input type="submit" value="Create post" />
-			</div>
-		</form>
+				<div class="field">
+					<div style="display: inline-block; width: 3em;"></div>
+					<input id="submit" type="submit" value="Create note" />
+				</div>
+			</form>
+		</div>
+
+		<script src="/static/codemirror/lib/codemirror.js"></script>
+		<script src="/static/codemirror/mode/markdown/markdown.js"></script>
+		<script src="/static/codemirror/addon/scroll/simplescrollbars.js"></script>
+		<script src="/static/write.js"></script>
 	</body>
 </html>
 `
