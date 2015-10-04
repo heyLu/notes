@@ -124,16 +124,27 @@
 				autofocus: true,
 			});
 
-			function savedName() {
-				return `notes|${location.href}`;
+			var savedName = null;
+			function getSavedName() {
+				if (savedName != null) {
+					return savedName;
+				}
+
+				var loc = new URL(location.href);
+				if (!loc.searchParams.has('title')) {
+					loc.searchParams.set('title', new Date().getTime());
+				}
+				savedName = `notes|${loc.toString()}`;
+				history.replaceState({}, "notes", loc.toString());
+				return savedName;
 			}
 
 			function saveDocument() {
-				localStorage[savedName()] = codeMirror.getValue();
+				localStorage[getSavedName()] = codeMirror.getValue();
 			}
 
 			function getSavedDocument() {
-				return localStorage[savedName()];
+				return localStorage[getSavedName()];
 			}
 
 			var needsSave = false;
@@ -163,10 +174,6 @@
 
 				document.title = `${title} - notes`;
 				titleEl.value = title;
-
-				var loc = new URL(location.href);
-				loc.search = `?title=${title}`;
-				history.replaceState({}, document.title, loc.toString());
 			}
 
 			function updateDocument() {
