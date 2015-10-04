@@ -251,18 +251,20 @@ func ListTags(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 }
 
 var templateFuncs = template.FuncMap{
-	"joinTags": func(tags []Tag) string {
+	"joinTags": func(tags []Tag) template.HTML {
 		if len(tags) == 0 {
 			return ""
 		}
 
-		joined := ""
+		joined := template.HTML("")
 		first := true
 		for _, tag := range tags {
 			if !first {
 				joined += ", "
 			}
-			joined += tag.Name()
+			tagLink := fmt.Sprintf("<a href=\"%s\">%s</a>",
+				template.JSEscapeString(tag.Name()), template.HTMLEscapeString(tag.Name()))
+			joined += template.HTML(tagLink)
 			first = false
 		}
 		return joined
@@ -347,6 +349,15 @@ var listPostsTemplateStr = `<!doctype html>
 			margin-bottom: 0;
 		}
 
+		.post .tags a {
+			text-decoration: none;
+			color: black;
+		}
+
+		.post .tags a:hover {
+			text-decoration: underline;
+		}
+
 		.post pre {
 			max-width: 40em;
 			font-family: "Liberation Mono", monospace;
@@ -368,7 +379,7 @@ var listPostsTemplateStr = `<!doctype html>
 			<h1>{{ .Title }}</h1>
 			{{ end }}
 			<time>{{ .Date }}</time>
-			{{ if .Tags }}<div>{{ .Tags | joinTags }}</div>{{ end }}
+			{{ if .Tags }}<div class="tags">{{ .Tags | joinTags }}</div>{{ end }}
 			<pre>{{ .Content }}</pre>
 		</div>
 		{{ end }}
