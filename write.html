@@ -80,18 +80,20 @@
 		</div>
 
 		<div id="sidebar">
-			<div class="field">
-				<label>url</label>
-				<input id="url" type="url" />
-			</div>
-			<div class="field">
-				<label>title</label>
-				<input id="title" type="text" required />
-			</div>
-			<div class="field">
-				<label>tags</label>
-				<input id="tags" type="text" />
-			</div>
+			<form method="POST" action="/new">
+				<div class="field">
+					<label>url</label>
+					<input id="url" type="url" />
+				</div>
+				<div class="field">
+					<label>title</label>
+					<input id="title" type="text" required />
+				</div>
+				<div class="field">
+					<label>tags</label>
+					<input id="tags" type="text" />
+				</div>
+			</form>
 		</div>
 
 		<script src="codemirror/lib/codemirror.js"></script>
