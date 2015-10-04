@@ -1,0 +1,70 @@
+body {
+	display: flex;
+	height: 100vh;
+	margin: 0;
+
+	font-family: "Liberation Mono", monospace;
+	font-size: smaller;
+}
+
+#editor {
+	flex-grow: 5;
+
+	display: flex;
+	justify-content: center;
+
+	position: relative;
+}
+
+#editor .CodeMirror {
+	width: 50em;
+	height: 100%;
+
+	font-family: "Liberation Mono", monospace;
+	font-size: 120%;
+}
+
+#editor .CodeMirror span {
+	color: black;
+}
+
+#editor-stats {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+
+	padding: 0.25em 0.5em;
+}
+
+#editor-stats span {
+	margin: 0 3em;
+}
+
+#sidebar {
+	padding: 1em;
+	background-color: #999;
+}
+
+.field label {
+	display: inline-block;
+	width: 3em;
+	color: white;
+}
+
+.field input {
+	width: 20em;
+	padding: 1ex 0.5ex;
+	margin-bottom: 1ex;
+	border: none;
+	font-family: "Liberation Mono", monospace;
+}
+
+#submit {
+	width: 20.5em;
+	background-color: white;
+	transition: background-color 0.25s;
+}
+
+#submit:hover {
+	background-color: #efefef;
+}
