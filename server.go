@@ -250,7 +250,11 @@ func ListTags(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 		tags = append(tags, datom.V().Val().(string))
 	}
 
-	return renderable.Renderable{Data: tags}, nil
+	return renderable.Renderable{
+		Metadata: map[string]interface{}{"Title": "All tags"},
+		Data:     tags,
+		Template: listTagsTemplate,
+	}, nil
 }
 
 var templateFuncs = template.FuncMap{
@@ -395,6 +399,24 @@ var listPostsTemplateStr = `<!doctype html>
 				}
 			});
 		</script>
+	</body>
+</html>
+`
+
+var listTagsTemplate = template.Must(template.New("").Funcs(templateFuncs).Parse(listTagsTemplateStr))
+var listTagsTemplateStr = `<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>{{ .Metadata.Title }}</title>
+	</head>
+
+	<body>
+		<ul class="tags">
+			{{ range .Data }}
+			<li><a href="/tags/{{ . }}">{{ . }}</a></li>
+			{{ end }}
+		</ul>
 	</body>
 </html>
 `
