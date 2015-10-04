@@ -52,7 +52,6 @@ func RunServer(conn connection.Connection) error {
 	})
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	http.HandleFunc("/tags", renderable.HandleRequest(ListTags))
-	http.HandleFunc("/tags/test", GetTagsTest)
 	fmt.Println("listening on", serverConfig.addr)
 	return http.ListenAndServe(serverConfig.addr, nil)
 }
@@ -198,25 +197,6 @@ func ListTags(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 
 	return renderable.Renderable{Data: tags}, nil
 }
-
-func GetTagsTest(w http.ResponseWriter, req *http.Request) {
-	tagsTestTemplate.Execute(w, nil)
-}
-
-var tagsTestTemplate = template.Must(template.New("").Parse(tagsTestTemplateStr))
-var tagsTestTemplateStr = `<!doctype html>
-<html>
-	<head>
-		<meta charset="utf-8" />
-		<title>tags test</title>
-	</head>
-
-	<body>
-		<input id="tags" type="text" size="30" autocomplete="off" />
-		<script src="/static/tags.js"></script>
-	</body>
-</html>
-`
 
 var templateFuncs = template.FuncMap{
 	"joinTags": func(tags []Tag) string {
