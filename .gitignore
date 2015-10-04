@@ -3,4 +3,4 @@
 /db
 /*.db
 /pinboard.xml
-/codemirror
+/static/codemirror

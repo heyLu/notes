@@ -50,6 +50,7 @@ func RunServer(conn connection.Connection) error {
 			http.Error(w, http.StatusText(status), status)
 		}
 	})
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	http.HandleFunc("/tags", renderable.HandleRequest(ListTags))
 	http.HandleFunc("/tags/test", GetTagsTest)
 	http.HandleFunc("/tags/test.js", func(w http.ResponseWriter, req *http.Request) {
