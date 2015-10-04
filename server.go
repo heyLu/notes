@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -52,6 +53,7 @@ func RunServer(conn connection.Connection) error {
 
 	http.HandleFunc("/notes/", renderable.HandleRequest(GetPost))
 	http.HandleFunc("/notes", renderable.HandleRequest(ListPosts))
+	http.HandleFunc("/tags/", renderable.HandleRequest(GetTag))
 	http.HandleFunc("/tags", renderable.HandleRequest(ListTags))
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
@@ -182,6 +184,52 @@ func ListPosts(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 		Template: listPostsTemplate,
 	}, nil
 }
+
+func GetTag(w http.ResponseWriter, req *http.Request) (interface{}, error) {
+	parts := strings.SplitN(req.URL.Path, "/", 3)
+	if len(parts) != 3 || parts[2] == "" {
+		return renderable.RenderableStatus(http.StatusBadRequest), nil
+	}
+	tagName := parts[2]
+
+	db := serverConfig.conn.Db()
+
+	id := db.Entid(mu.Keyword("note", "tags"))
+	if id == -1 {
+		panic("db not initialized")
+	}
+
+	tagId := db.Entid(mu.LookupRef(mu.Keyword("tag", "name"), tagName))
+	if tagId == -1 {
+		return renderable.RenderableStatus(http.StatusNotFound), nil
+	}
+
+	min, max := index.MinDatom, index.MaxDatom
+	start := index.NewDatom(min.E(), id, tagId, min.Tx(), min.Added())
+	end := index.NewDatom(max.E(), id, tagId, max.Tx(), max.Added())
+	iter := db.Vaet().DatomsAt(start, end)
+
+	posts := make([]Post, 0)
+	for datom := iter.Next(); datom != nil; datom = iter.Next() {
+		posts = append(posts, Post{db.Entity(datom.E())})
+	}
+
+	sort.Reverse(postsByDate(posts))
+
+	return renderable.Renderable{
+		Metadata: map[string]interface{}{
+			"Title": fmt.Sprintf("Notes tagged '%s'", tagName),
+		},
+		Data:     posts,
+		Template: listPostsTemplate,
+	}, nil
+}
+
+type postsByDate []Post
+
+func (p postsByDate) Len() int           { return len(p) }
+func (p postsByDate) Less(i, j int) bool { return p[i].Date().Unix() < p[j].Date().Unix() }
+func (p postsByDate) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 func ListTags(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 	db := serverConfig.conn.Db()
