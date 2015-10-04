@@ -131,8 +131,8 @@
 				}
 
 				var loc = new URL(location.href);
-				if (!loc.searchParams.has('title')) {
-					loc.searchParams.set('title', new Date().getTime());
+				if (!loc.searchParams.has('key')) {
+					loc.searchParams.set('key', new Date().getTime());
 				}
 				savedName = `notes|${loc.toString()}`;
 				history.replaceState({}, "notes", loc.toString());
