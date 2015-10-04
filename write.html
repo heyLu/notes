@@ -124,13 +124,16 @@
 				autofocus: true,
 			});
 
-			var savedName = `notes|${location.href}`;
+			function savedName {
+				return `notes|${location.href}`;
+			}
+
 			function saveDocument() {
-				localStorage[savedName] = codeMirror.getValue();
+				localStorage[savedName()] = codeMirror.getValue();
 			}
 
 			function getSavedDocument() {
-				return localStorage[savedName];
+				return localStorage[savedName()];
 			}
 
 			var needsSave = false;
