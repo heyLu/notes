@@ -16,6 +16,7 @@ styleEl.textContent = `
 	padding: 0;
 	border: 1px solid #ddd;
 	min-width: 10em;
+	background-color: white;
 }
 
 .suggestion {

@@ -270,7 +270,7 @@ var createPostTemplateStr = `<!doctype html>
 				</div>
 				<div class="field">
 					<label for="tags">tags</label>
-					<input id="tags" name="tags" type="text" />
+					<input id="tags" name="tags" type="text" autocomplete="off" />
 				</div>
 
 				<input id="content" name="content" type="hidden" />
@@ -286,6 +286,7 @@ var createPostTemplateStr = `<!doctype html>
 		<script src="/static/codemirror/mode/markdown/markdown.js"></script>
 		<script src="/static/codemirror/addon/scroll/simplescrollbars.js"></script>
 		<script src="/static/write.js"></script>
+		<script src="/static/tags.js"></script>
 	</body>
 </html>
 `
