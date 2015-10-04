@@ -37,8 +37,7 @@ func RunServer(conn connection.Connection) error {
 		status := http.StatusNotFound
 		http.Error(w, http.StatusText(status), status)
 	})
-	http.HandleFunc("/notes/", renderable.HandleRequest(GetPost))
-	http.HandleFunc("/notes", renderable.HandleRequest(ListPosts))
+
 	http.HandleFunc("/new", func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
 		case "GET":
@@ -50,8 +49,13 @@ func RunServer(conn connection.Connection) error {
 			http.Error(w, http.StatusText(status), status)
 		}
 	})
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
+	http.HandleFunc("/notes/", renderable.HandleRequest(GetPost))
+	http.HandleFunc("/notes", renderable.HandleRequest(ListPosts))
 	http.HandleFunc("/tags", renderable.HandleRequest(ListTags))
+
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
 	fmt.Println("listening on", serverConfig.addr)
 	return http.ListenAndServe(serverConfig.addr, nil)
 }
