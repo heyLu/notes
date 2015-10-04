@@ -67,6 +67,16 @@
 			border: none;
 			font-family: "Liberation Mono", monospace;
 		}
+
+		#submit {
+			width: 20.5em;
+			background-color: white;
+			transition: background-color 0.25s;
+		}
+
+		#submit:hover {
+			background-color: #efefef;
+		}
 		</style>
 	</head>
 
@@ -95,6 +105,11 @@
 				</div>
 
 				<input id="content" type="hidden" />
+
+				<div class="field">
+					<div style="display: inline-block; width: 3em;"></div>
+					<input id="submit" type="submit" value="Create note" />
+				</div>
 			</form>
 		</div>
 
