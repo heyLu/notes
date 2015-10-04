@@ -53,9 +53,6 @@ func RunServer(conn connection.Connection) error {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	http.HandleFunc("/tags", renderable.HandleRequest(ListTags))
 	http.HandleFunc("/tags/test", GetTagsTest)
-	http.HandleFunc("/tags/test.js", func(w http.ResponseWriter, req *http.Request) {
-		http.ServeFile(w, req, "tags-test.js")
-	})
 	fmt.Println("listening on", serverConfig.addr)
 	return http.ListenAndServe(serverConfig.addr, nil)
 }
@@ -216,7 +213,7 @@ var tagsTestTemplateStr = `<!doctype html>
 
 	<body>
 		<input id="tags" type="text" size="30" autocomplete="off" />
-		<script src="/tags/test.js"></script>
+		<script src="/static/tags.js"></script>
 	</body>
 </html>
 `
