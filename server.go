@@ -74,8 +74,8 @@ func GetPost(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 	if aid == -1 {
 		panic("db not initialized")
 	}
-	minDatom := index.NewDatom(index.MinDatom.E(), aid, noteId, index.MinDatom.Tx(), index.MinDatom.Added())
-	maxDatom := index.NewDatom(index.MaxDatom.E(), aid, noteId, index.MaxDatom.Tx(), index.MaxDatom.Added())
+	minDatom := index.NewDatom(index.MinDatom.E(), aid, noteId, index.MaxDatom.Tx(), index.MinDatom.Added())
+	maxDatom := index.NewDatom(index.MaxDatom.E(), aid, noteId, index.MinDatom.Tx(), index.MaxDatom.Added())
 	iter := db.Avet().DatomsAt(minDatom, maxDatom)
 	datom := iter.Next()
 	if datom == nil {
@@ -159,8 +159,8 @@ func ListPosts(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 	}
 
 	min, max := index.MinDatom, index.MaxDatom
-	start := index.NewDatom(max.E(), id, min.V(), min.Tx(), min.Added())
-	end := index.NewDatom(min.E(), id, max.V(), max.Tx(), max.Added())
+	start := index.NewDatom(min.E(), id, min.V(), max.Tx(), min.Added())
+	end := index.NewDatom(max.E(), id, max.V(), min.Tx(), max.Added())
 	iter := db.Avet().DatomsAt(start, end)
 
 	postIds := make([]int, 0)
@@ -205,8 +205,8 @@ func GetTag(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 	}
 
 	min, max := index.MinDatom, index.MaxDatom
-	start := index.NewDatom(min.E(), id, tagId, min.Tx(), min.Added())
-	end := index.NewDatom(max.E(), id, tagId, max.Tx(), max.Added())
+	start := index.NewDatom(min.E(), id, tagId, max.Tx(), min.Added())
+	end := index.NewDatom(max.E(), id, tagId, min.Tx(), max.Added())
 	iter := db.Vaet().DatomsAt(start, end)
 
 	posts := make([]Post, 0)
@@ -241,8 +241,8 @@ func ListTags(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 	if aid == -1 {
 		panic("db not initialized")
 	}
-	minDatom := index.NewDatom(index.MinDatom.E(), aid, index.MinValue, index.MinDatom.Tx(), index.MinDatom.Added())
-	maxDatom := index.NewDatom(index.MaxDatom.E(), aid, index.MaxValue, index.MaxDatom.Tx(), index.MaxDatom.Added())
+	minDatom := index.NewDatom(index.MinDatom.E(), aid, index.MinValue, index.MaxDatom.Tx(), index.MinDatom.Added())
+	maxDatom := index.NewDatom(index.MaxDatom.E(), aid, index.MaxValue, index.MinDatom.Tx(), index.MaxDatom.Added())
 	iter := db.Avet().DatomsAt(minDatom, maxDatom)
 
 	tags := make([]string, 0)
