@@ -269,7 +269,7 @@ var templateFuncs = template.FuncMap{
 			if !first {
 				joined += ", "
 			}
-			tagLink := fmt.Sprintf("<a href=\"%s\">%s</a>",
+			tagLink := fmt.Sprintf("<a href=\"/tags/%s\">%s</a>",
 				template.JSEscapeString(tag.Name()), template.HTMLEscapeString(tag.Name()))
 			joined += template.HTML(tagLink)
 			first = false
