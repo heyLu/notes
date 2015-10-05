@@ -213,7 +213,7 @@ func GetTag(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 	for datom := iter.Next(); datom != nil; datom = iter.Next() {
 		posts = append(posts, Post{db.Entity(datom.E())})
 	}
-	sort.Reverse(postsByDate(posts))
+	sort.Sort(sort.Reverse(postsByDate(posts)))
 
 	n := fromQueryInt(req, "n", 100)
 	if n < 1 || n > len(posts) {
