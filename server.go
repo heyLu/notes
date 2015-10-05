@@ -51,7 +51,18 @@ func RunServer(conn connection.Connection) error {
 		}
 	})
 
-	http.HandleFunc("/notes/", renderable.HandleRequest(GetPost))
+	http.HandleFunc("/notes/", func(w http.ResponseWriter, req *http.Request) {
+		if strings.HasSuffix(req.URL.Path, "/edit") {
+			if req.Method == "POST" {
+				NewPost(w, req)
+				return
+			}
+
+			renderable.HandleRequest(EditPost)(w, req)
+		} else {
+			renderable.HandleRequest(GetPost)(w, req)
+		}
+	})
 	http.HandleFunc("/notes", renderable.HandleRequest(ListPosts))
 	http.HandleFunc("/tags/", renderable.HandleRequest(GetTag))
 	http.HandleFunc("/tags", renderable.HandleRequest(ListTags))
@@ -92,6 +103,36 @@ func GetPost(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 	}, nil
 }
 
+func EditPost(w http.ResponseWriter, req *http.Request) (interface{}, error) {
+	parts := strings.SplitN(req.URL.Path, "/", 4)
+	if len(parts) != 4 || parts[2] == "" {
+		return renderable.RenderableStatus(http.StatusBadRequest), nil
+	}
+	noteId := parts[2]
+
+	db := serverConfig.conn.Db()
+	aid := db.Entid(mu.Keyword("note", "id"))
+	if aid == -1 {
+		panic("db not initialized")
+	}
+	minDatom := index.NewDatom(index.MinDatom.E(), aid, noteId, index.MaxDatom.Tx(), index.MinDatom.Added())
+	maxDatom := index.NewDatom(index.MaxDatom.E(), aid, noteId, index.MinDatom.Tx(), index.MaxDatom.Added())
+	iter := db.Avet().DatomsAt(minDatom, maxDatom)
+	datom := iter.Next()
+	if datom == nil {
+		return renderable.RenderableStatus(http.StatusNotFound), nil
+	}
+
+	post := Post{db.Entity(datom.E())}
+	return renderable.Renderable{
+		Metadata: map[string]interface{}{
+			"Title": post.Title(),
+		},
+		Data:     post,
+		Template: createPostTemplate,
+	}, nil
+}
+
 func CreatePost(w http.ResponseWriter, req *http.Request) {
 	createPostTemplate.Execute(w, nil)
 }
@@ -103,13 +144,17 @@ func NewPost(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	id := req.FormValue("id")
+	if id == "" {
+		id = generateId()
+	}
 	title := req.FormValue("title")
 	content := req.FormValue("content")
 	date := time.Now().Round(time.Second)
 
 	noteId := mu.Id(mu.Tempid(mu.DbPartUser, -1))
 	txData := make([]tx.TxDatum, 4)
-	txData[0] = tx.Datum{Op: tx.Assert, E: noteId, A: mu.Keyword("note", "id"), V: tx.NewValue(generateId())}
+	txData[0] = tx.Datum{Op: tx.Assert, E: noteId, A: mu.Keyword("note", "id"), V: tx.NewValue(id)}
 	txData[1] = tx.Datum{Op: tx.Assert, E: noteId, A: mu.Keyword("note", "title"), V: tx.NewValue(title)}
 	txData[2] = tx.Datum{Op: tx.Assert, E: noteId, A: mu.Keyword("note", "content"), V: tx.NewValue(content)}
 	txData[3] = tx.Datum{Op: tx.Assert, E: noteId, A: mu.Keyword("note", "date"), V: tx.NewValue(date)}
@@ -276,9 +321,21 @@ var templateFuncs = template.FuncMap{
 		}
 		return joined
 	},
+	"join": func(tags []Tag, separator string) string {
+		joined := ""
+		first := true
+		for _, tag := range tags {
+			if !first {
+				joined += separator
+			}
+			joined += tag.Name()
+			first = false
+		}
+		return joined
+	},
 }
 
-var createPostTemplate = template.Must(template.New("").Parse(createPostTemplateStr))
+var createPostTemplate = template.Must(template.New("").Funcs(templateFuncs).Parse(createPostTemplateStr))
 var createPostTemplateStr = `<!doctype html>
 <html>
 	<head>
@@ -303,7 +360,7 @@ var createPostTemplateStr = `<!doctype html>
 			<form method="POST" action="/new">
 				<div class="field">
 					<label for="url">url</label>
-					<input id="url" name="url" type="url" />
+					<input id="url" name="url" type="url" value="{{ if .Data.URL }}{{ .Data.URL }}{{ end }}" />
 				</div>
 				<div class="field">
 					<label for="title">title</label>
@@ -311,9 +368,10 @@ var createPostTemplateStr = `<!doctype html>
 				</div>
 				<div class="field">
 					<label for="tags">tags</label>
-					<input id="tags" name="tags" type="text" autocomplete="off" />
+					<input id="tags" name="tags" type="text" autocomplete="off" value="{{ join .Data.Tags " " }}" />
 				</div>
 
+				<input name="id" type="hidden" value="{{ .Data.Id }}" />
 				<input id="content" name="content" type="hidden" />
 
 				<div class="field">
@@ -328,6 +386,13 @@ var createPostTemplateStr = `<!doctype html>
 		<script src="/static/codemirror/addon/scroll/simplescrollbars.js"></script>
 		<script src="/static/write.js"></script>
 		<script src="/static/tags.js"></script>
+		{{ if .Data }}
+		<script>
+			if (codeMirror.getValue() == "") {
+				codeMirror.setValue({{ printf "# %s\n%s" .Data.Title .Data.Content }});
+			}
+		</script>
+		{{ end }}
 	</body>
 </html>
 `
