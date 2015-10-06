@@ -64,6 +64,7 @@ func RunServer(conn connection.Connection) error {
 		}
 	})
 	http.HandleFunc("/notes", renderable.HandleRequest(ListPosts))
+	http.HandleFunc("/search", renderable.HandleRequest(SearchPosts))
 	http.HandleFunc("/tags/", renderable.HandleRequest(GetTag))
 	http.HandleFunc("/tags", renderable.HandleRequest(ListTags))
 
@@ -226,6 +227,47 @@ func ListPosts(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 			"Title": "All notes",
 		},
 		Data:     posts,
+		Template: listPostsTemplate,
+	}, nil
+}
+
+func SearchPosts(w http.ResponseWriter, req *http.Request) (interface{}, error) {
+	query := req.FormValue("q")
+	if query == "" {
+		return renderable.Renderable{
+			Metadata: map[string]interface{}{"Title": "Search notes"},
+			Template: listPostsTemplate,
+		}, nil
+	}
+
+	db := serverConfig.conn.Db()
+	id := db.Entid(mu.Keyword("note", "title"))
+	if id == -1 {
+		panic("db not initialized")
+	}
+
+	min, max := index.MinDatom, index.MaxDatom
+	start := index.NewDatom(min.E(), id, min.V(), max.Tx(), min.Added())
+	end := index.NewDatom(max.E(), id, max.V(), min.Tx(), max.Added())
+	iter := db.Aevt().DatomsAt(start, end)
+
+	posts := make([]Post, 0)
+	for datom := iter.Next(); datom != nil; datom = iter.Next() {
+		if strings.Contains(strings.ToLower(datom.V().Val().(string)), strings.ToLower(query)) {
+			posts = append(posts, Post{db.Entity(datom.E())})
+		}
+	}
+	sort.Sort(sort.Reverse(postsByDate(posts)))
+
+	n := fromQueryInt(req, "n", 100)
+	if n < 1 || n > len(posts) {
+		n = len(posts)
+	}
+	return renderable.Renderable{
+		Metadata: map[string]interface{}{
+			"Title": fmt.Sprintf("Search for '%s'", query),
+		},
+		Data:     posts[0:n],
 		Template: listPostsTemplate,
 	}, nil
 }
@@ -448,6 +490,10 @@ var listPostsTemplateStr = `<!doctype html>
 				}
 			});
 		</script>
+
+		<form method="GET" action="/search">
+			<input id="search" name="q" type="search" />
+		</form>
 
 		<a id="new-note" href="/new">Write a note</a>
 
