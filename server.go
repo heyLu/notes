@@ -440,6 +440,15 @@ var listPostsTemplateStr = `<!doctype html>
 	</head>
 
 	<body>
+		<script>
+			window.addEventListener("keydown", function(ev) {
+				if (ev.ctrlKey && ev.key == "n") {
+					ev.preventDefault();
+					window.location = "/new";
+				}
+			});
+		</script>
+
 		<a id="new-note" href="/new">Write a note</a>
 
 		{{ range .Data }}
@@ -455,15 +464,6 @@ var listPostsTemplateStr = `<!doctype html>
 			<pre>{{ .Content }}</pre>
 		</div>
 		{{ end }}
-
-		<script>
-			window.addEventListener("keydown", function(ev) {
-				if (ev.ctrlKey && ev.key == "n") {
-					ev.preventDefault();
-					window.location = "/new";
-				}
-			});
-		</script>
 	</body>
 </html>
 `
