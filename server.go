@@ -376,7 +376,7 @@ var createPostTemplateStr = `<!doctype html>
 
 				<div class="field">
 					<div style="display: inline-block; width: 3em;"></div>
-					<input id="submit" type="submit" value="Create note" />
+					<input id="submit" type="submit" value="{{ if .Data }}Edit note{{ else }}Create note{{ end }}" />
 				</div>
 			</form>
 		</div>
