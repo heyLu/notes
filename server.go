@@ -151,7 +151,18 @@ func NewPost(w http.ResponseWriter, req *http.Request) {
 	}
 	title := req.FormValue("title")
 	content := req.FormValue("content")
-	date := time.Now().Round(time.Second)
+	rawDate := req.FormValue("date")
+
+	var date time.Time
+	if rawDate == "" {
+		date = time.Now().Round(time.Second)
+	} else {
+		date, err = time.Parse(time.RFC3339, rawDate)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
 
 	noteId := mu.Id(mu.Tempid(mu.DbPartUser, -1))
 	txData := make([]tx.TxDatum, 4)
@@ -375,6 +386,9 @@ var templateFuncs = template.FuncMap{
 		}
 		return joined
 	},
+	"time_rfc3339": func(t time.Time) string {
+		return t.Format(time.RFC3339)
+	},
 }
 
 var createPostTemplate = template.Must(template.New("").Funcs(templateFuncs).Parse(createPostTemplateStr))
@@ -414,6 +428,7 @@ var createPostTemplateStr = `<!doctype html>
 				</div>
 
 				<input name="id" type="hidden" value="{{ .Data.Id }}" />
+				<input name="date" type="hidden" value="{{ .Data.Date | time_rfc3339 }}" />
 				<input id="content" name="content" type="hidden" />
 
 				<div class="field">
