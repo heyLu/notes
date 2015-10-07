@@ -23,10 +23,11 @@ import (
 )
 
 type Renderable struct {
-	Status   int
-	Metadata map[string]interface{}
-	Data     interface{}
-	Template *template.Template
+	Status      int
+	Metadata    map[string]interface{}
+	Data        interface{}
+	Template    *template.Template
+	ContentType string
 }
 
 func RenderableStatus(status int) Renderable {
@@ -68,6 +69,10 @@ func render(w http.ResponseWriter, req *http.Request, contentType string, render
 		renderable.Status = 200
 	}
 	w.WriteHeader(renderable.Status)
+
+	if renderable.ContentType != "" {
+		contentType = renderable.ContentType
+	}
 
 	switch contentType {
 	case "text/html":
