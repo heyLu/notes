@@ -64,9 +64,12 @@ func RunServer(conn connection.Connection) error {
 		}
 	})
 	http.HandleFunc("/notes", renderable.HandleRequest(ListPosts))
+	http.HandleFunc("/notes.json", renderable.HandleRequest(ListPosts))
 	http.HandleFunc("/search", renderable.HandleRequest(SearchPosts))
+	http.HandleFunc("/search.json", renderable.HandleRequest(SearchPosts))
 	http.HandleFunc("/tags/", renderable.HandleRequest(GetTag))
 	http.HandleFunc("/tags", renderable.HandleRequest(ListTags))
+	http.HandleFunc("/tags.json", renderable.HandleRequest(ListTags))
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
@@ -75,7 +78,8 @@ func RunServer(conn connection.Connection) error {
 }
 
 func GetPost(w http.ResponseWriter, req *http.Request) (interface{}, error) {
-	parts := strings.SplitN(req.URL.Path, "/", 3)
+	path, contentType := contentTypeFromExtension(req.URL.Path)
+	parts := strings.SplitN(path, "/", 3)
 	if len(parts) != 3 || parts[2] == "" {
 		return renderable.RenderableStatus(http.StatusBadRequest), nil
 	}
@@ -99,8 +103,9 @@ func GetPost(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 		Metadata: map[string]interface{}{
 			"Title": post.Title(),
 		},
-		Data:     []Post{post},
-		Template: listPostsTemplate,
+		Data:        []Post{post},
+		Template:    listPostsTemplate,
+		ContentType: contentType,
 	}, nil
 }
 
@@ -233,12 +238,14 @@ func ListPosts(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 		posts = append(posts, Post{entity})
 	}
 
+	_, contentType := contentTypeFromExtension(req.URL.Path)
 	return renderable.Renderable{
 		Metadata: map[string]interface{}{
 			"Title": "All notes",
 		},
-		Data:     posts,
-		Template: listPostsTemplate,
+		Data:        posts,
+		Template:    listPostsTemplate,
+		ContentType: contentType,
 	}, nil
 }
 
@@ -274,17 +281,20 @@ func SearchPosts(w http.ResponseWriter, req *http.Request) (interface{}, error) 
 	if n < 1 || n > len(posts) {
 		n = len(posts)
 	}
+	_, contentType := contentTypeFromExtension(req.URL.Path)
 	return renderable.Renderable{
 		Metadata: map[string]interface{}{
 			"Title": fmt.Sprintf("Search for '%s'", query),
 		},
-		Data:     posts[0:n],
-		Template: listPostsTemplate,
+		Data:        posts[0:n],
+		Template:    listPostsTemplate,
+		ContentType: contentType,
 	}, nil
 }
 
 func GetTag(w http.ResponseWriter, req *http.Request) (interface{}, error) {
-	parts := strings.SplitN(req.URL.Path, "/", 3)
+	path, contentType := contentTypeFromExtension(req.URL.Path)
+	parts := strings.SplitN(path, "/", 3)
 	if len(parts) != 3 || parts[2] == "" {
 		return renderable.RenderableStatus(http.StatusBadRequest), nil
 	}
@@ -321,8 +331,9 @@ func GetTag(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 		Metadata: map[string]interface{}{
 			"Title": fmt.Sprintf("Notes tagged '%s'", tagName),
 		},
-		Data:     posts[0:n],
-		Template: listPostsTemplate,
+		Data:        posts[0:n],
+		Template:    listPostsTemplate,
+		ContentType: contentType,
 	}, nil
 }
 
@@ -348,10 +359,12 @@ func ListTags(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 		tags = append(tags, datom.V().Val().(string))
 	}
 
+	_, contentType := contentTypeFromExtension(req.URL.Path)
 	return renderable.Renderable{
-		Metadata: map[string]interface{}{"Title": "All tags"},
-		Data:     tags,
-		Template: listTagsTemplate,
+		Metadata:    map[string]interface{}{"Title": "All tags"},
+		Data:        tags,
+		Template:    listTagsTemplate,
+		ContentType: contentType,
 	}, nil
 }
 
@@ -546,6 +559,20 @@ var listTagsTemplateStr = `<!doctype html>
 	</body>
 </html>
 `
+
+func contentTypeFromExtension(s string) (path string, contentType string) {
+	parts := strings.SplitN(s, ".", 2)
+	if len(parts) == 2 {
+		switch parts[1] {
+		case "json":
+			return parts[0], "application/json"
+		case "html":
+			return parts[0], "text/html"
+		}
+	}
+
+	return s, ""
+}
 
 func fromQueryInt(req *http.Request, param string, n int) int {
 	val := req.URL.Query().Get(param)
