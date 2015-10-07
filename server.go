@@ -441,7 +441,7 @@ var createPostTemplateStr = `<!doctype html>
 				</div>
 
 				<input name="id" type="hidden" value="{{ .Data.Id }}" />
-				<input name="date" type="hidden" value="{{ .Data.Date | time_rfc3339 }}" />
+				<input name="date" type="hidden" value="{{ if .Data }}{{ .Data.Date | time_rfc3339 }}{{ end }}" />
 				<input id="content" name="content" type="hidden" />
 
 				<div class="field">
