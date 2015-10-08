@@ -65,14 +65,15 @@ func HandleRequest(handler func(http.ResponseWriter, *http.Request) (interface{}
 }
 
 func render(w http.ResponseWriter, req *http.Request, contentType string, renderable Renderable) {
+	if renderable.ContentType != "" {
+		contentType = renderable.ContentType
+	}
+	w.Header().Set("Content-Type", contentType)
+
 	if renderable.Status == 0 {
 		renderable.Status = 200
 	}
 	w.WriteHeader(renderable.Status)
-
-	if renderable.ContentType != "" {
-		contentType = renderable.ContentType
-	}
 
 	switch contentType {
 	case "text/html":
