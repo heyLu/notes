@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/heyLu/mu"
 	"github.com/heyLu/mu/connection"
-	"github.com/heyLu/mu/index"
 	tx "github.com/heyLu/mu/transactor"
 	"html/template"
 	"net/http"
@@ -86,13 +85,7 @@ func GetPost(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 	noteId := parts[2]
 
 	db := serverConfig.conn.Db()
-	aid := db.Entid(mu.Keyword("note", "id"))
-	if aid == -1 {
-		panic("db not initialized")
-	}
-	minDatom := index.NewDatom(index.MinDatom.E(), aid, noteId, index.MaxDatom.Tx(), index.MinDatom.Added())
-	maxDatom := index.NewDatom(index.MaxDatom.E(), aid, noteId, index.MinDatom.Tx(), index.MaxDatom.Added())
-	iter := db.Avet().DatomsAt(minDatom, maxDatom)
+	iter := db.Avet().Datoms2(mu.Keyword("note", "id"), noteId, nil)
 	datom := iter.Next()
 	if datom == nil {
 		return renderable.RenderableStatus(http.StatusNotFound), nil
@@ -117,13 +110,7 @@ func EditPost(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 	noteId := parts[2]
 
 	db := serverConfig.conn.Db()
-	aid := db.Entid(mu.Keyword("note", "id"))
-	if aid == -1 {
-		panic("db not initialized")
-	}
-	minDatom := index.NewDatom(index.MinDatom.E(), aid, noteId, index.MaxDatom.Tx(), index.MinDatom.Added())
-	maxDatom := index.NewDatom(index.MaxDatom.E(), aid, noteId, index.MinDatom.Tx(), index.MaxDatom.Added())
-	iter := db.Avet().DatomsAt(minDatom, maxDatom)
+	iter := db.Avet().Datoms2(mu.Keyword("note", "id"), noteId, nil)
 	datom := iter.Next()
 	if datom == nil {
 		return renderable.RenderableStatus(http.StatusNotFound), nil
@@ -213,17 +200,7 @@ func NewPost(w http.ResponseWriter, req *http.Request) {
 
 func ListPosts(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 	db := serverConfig.conn.Db()
-
-	id := db.Entid(mu.Keyword("note", "date"))
-	if id == -1 {
-		fmt.Fprintf(os.Stderr, "Error: :note/date not present\n")
-		os.Exit(1)
-	}
-
-	min, max := index.MinDatom, index.MaxDatom
-	start := index.NewDatom(min.E(), id, min.V(), max.Tx(), min.Added())
-	end := index.NewDatom(max.E(), id, max.V(), min.Tx(), max.Added())
-	iter := db.Avet().DatomsAt(start, end)
+	iter := db.Avet().Datoms2(mu.Keyword("note", "date"), nil, nil)
 
 	postIds := make([]int, 0)
 	for datom := iter.Next(); datom != nil; datom = iter.Next() {
@@ -259,15 +236,7 @@ func SearchPosts(w http.ResponseWriter, req *http.Request) (interface{}, error) 
 	}
 
 	db := serverConfig.conn.Db()
-	id := db.Entid(mu.Keyword("note", "title"))
-	if id == -1 {
-		panic("db not initialized")
-	}
-
-	min, max := index.MinDatom, index.MaxDatom
-	start := index.NewDatom(min.E(), id, min.V(), max.Tx(), min.Added())
-	end := index.NewDatom(max.E(), id, max.V(), min.Tx(), max.Added())
-	iter := db.Aevt().DatomsAt(start, end)
+	iter := db.Aevt().Datoms2(mu.Keyword("note", "title"), nil, nil)
 
 	posts := make([]Post, 0)
 	for datom := iter.Next(); datom != nil; datom = iter.Next() {
@@ -301,21 +270,11 @@ func GetTag(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 	tagName := parts[2]
 
 	db := serverConfig.conn.Db()
-
-	id := db.Entid(mu.Keyword("note", "tags"))
-	if id == -1 {
-		panic("db not initialized")
-	}
-
 	tagId := db.Entid(mu.LookupRef(mu.Keyword("tag", "name"), tagName))
 	if tagId == -1 {
 		return renderable.RenderableStatus(http.StatusNotFound), nil
 	}
-
-	min, max := index.MinDatom, index.MaxDatom
-	start := index.NewDatom(min.E(), id, tagId, max.Tx(), min.Added())
-	end := index.NewDatom(max.E(), id, tagId, min.Tx(), max.Added())
-	iter := db.Vaet().DatomsAt(start, end)
+	iter := db.Vaet().Datoms2(mu.Id(tagId), mu.Keyword("note", "tags"), nil)
 
 	posts := make([]Post, 0)
 	for datom := iter.Next(); datom != nil; datom = iter.Next() {
@@ -345,14 +304,7 @@ func (p postsByDate) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 func ListTags(w http.ResponseWriter, req *http.Request) (interface{}, error) {
 	db := serverConfig.conn.Db()
-
-	aid := db.Entid(mu.Keyword("tag", "name"))
-	if aid == -1 {
-		panic("db not initialized")
-	}
-	minDatom := index.NewDatom(index.MinDatom.E(), aid, index.MinValue, index.MaxDatom.Tx(), index.MinDatom.Added())
-	maxDatom := index.NewDatom(index.MaxDatom.E(), aid, index.MaxValue, index.MinDatom.Tx(), index.MaxDatom.Added())
-	iter := db.Avet().DatomsAt(minDatom, maxDatom)
+	iter := db.Avet().Datoms2(mu.Keyword("tag", "name"), nil, nil)
 
 	tags := make([]string, 0)
 	for datom := iter.Next(); datom != nil; datom = iter.Next() {
