@@ -68,7 +68,7 @@ func render(w http.ResponseWriter, req *http.Request, contentType string, render
 	if renderable.ContentType != "" {
 		contentType = renderable.ContentType
 	}
-	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Content-Type", contentType+"; charset=UTF-8")
 
 	if renderable.Status == 0 {
 		renderable.Status = 200
