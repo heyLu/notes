@@ -1,6 +1,7 @@
 var editorEl = document.querySelector("#editor");
 var codeMirror = new CodeMirror(editorEl, {
 	lineWrapping: true,
+	indentWithTabs: true,
 	scrollbarStyle: "overlay",
 	autofocus: true,
 });
